@@ -28,18 +28,20 @@ int ExecFullColor(int nIndex, HWND hWnd, PFilterImage* pFilterImage, PProvidedFu
 
 // TODO: １つのプラグインには複数のフィルタを登録できます。
 //       登録するフィルタの数を定義してください。
-#define FILTER_IN_PLUGIN 1
+#define FILTER_IN_PLUGIN 2
 
 // TODO: フィルタの種類を 英語表記|日本語表記 で定義してください。
 const char* g_szKinds[FILTER_IN_PLUGIN] = 
 {
+	"Color|カラー",
 	"Color|カラー"
 };
 
 // TODO: フィルタの名前を 英語表記|日本語表記 で定義してください。
 const char* g_szNames[FILTER_IN_PLUGIN] = 
 {
-	"Alpha Channel|アルファチャンネル"
+	"Alpha Channel|アルファチャンネル",
+	"Color Channel|カラーチャンネル"
 };
 
 // TODO: サポートしているイメージタイプ、及びオプションを定義してください。 
@@ -49,6 +51,7 @@ const char* g_szNames[FILTER_IN_PLUGIN] =
 //       ターゲットレイヤーに対してのみ行ってください。
 DWORD g_dwFormats[FILTER_IN_PLUGIN] =
 {
+	/*PBF_TYPE_MONO | PBF_TYPE_GRAYSCALE | PBF_TYPE_INDEXCOLOR | */PBF_TYPE_FULLCOLOR /*| PBF_REFERENCE_IMAGE*/,
 	/*PBF_TYPE_MONO | PBF_TYPE_GRAYSCALE | PBF_TYPE_INDEXCOLOR | */PBF_TYPE_FULLCOLOR /*| PBF_REFERENCE_IMAGE*/
 };
 
@@ -206,23 +209,43 @@ int ExecIndexColor(int nIndex, HWND hWnd, PFilterImage* pFilterImage, PProvidedF
 // フルカラー
 int ExecFullColor(int nIndex, HWND hWnd, PFilterImage* pFilterImage, PProvidedFunc* pFunc)
 {
-	int x, y;
-
-	for (y=0; y<pFilterImage->nHeight; y++) 
+	if (nIndex == 0)
 	{
-		for (x=0; x<pFilterImage->nWidth; x++) 
+		for (int y = 0; y < pFilterImage->nHeight; y++) 
 		{
-			Pixel32 pixel;
-			pixel.color = pFilterImage->pSrc[x + y*pFilterImage->nWidth];
-			pixel.item.r = pixel.item.a;
-			pixel.item.g = pixel.item.a;
-			pixel.item.b = pixel.item.a;
-			pixel.item.a = 255;
+			for (int x = 0; x < pFilterImage->nWidth; x++) 
+			{
+				Pixel32 pixel;
+				pixel.color = pFilterImage->pSrc[x + y*pFilterImage->nWidth];
+				pixel.item.r = pixel.item.a;
+				pixel.item.g = pixel.item.a;
+				pixel.item.b = pixel.item.a;
+				pixel.item.a = 255;
 
-			pFilterImage->pDst[x + y*pFilterImage->nWidth] = pixel.color;
+				pFilterImage->pDst[x + y*pFilterImage->nWidth] = pixel.color;
+			}
+
+			pFunc->ProgressSetPos(y);
 		}
+	}
+	else if (nIndex == 1)
+	{
+		for (int y = 0; y < pFilterImage->nHeight; y++) 
+		{
+			for (int x = 0; x < pFilterImage->nWidth; x++) 
+			{
+				Pixel32 pixel;
+				pixel.color = pFilterImage->pSrc[x + y*pFilterImage->nWidth];
+				pixel.item.r = pixel.item.r;
+				pixel.item.g = pixel.item.g;
+				pixel.item.b = pixel.item.b;
+				pixel.item.a = 255;
 
-		pFunc->ProgressSetPos(y);
+				pFilterImage->pDst[x + y*pFilterImage->nWidth] = pixel.color;
+			}
+
+			pFunc->ProgressSetPos(y);
+		}
 	}
 
 	return 0;
